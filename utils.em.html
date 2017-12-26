@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta name="generator" content="Source Insight Version 4.00.0084 Built on 2017-02-26">
+<meta charset='UTF-8' />
+<style type='text/css'><!--
+TD {background-color: #C0C0C0; font-family: 'Verdana', 'Arial', 'Helvetica', Sans-Serif; font-size: 70%; }
+.blurb {font-family: 'Verdana', 'Arial', 'Helvetica', Sans-Serif; font-size: 70%; }
+.filename {font-family: 'Verdana', 'Arial', 'Helvetica', Sans-Serif; font-size: 120%; font-weight: bold; }
+.dirname {font-family: 'Verdana', 'Arial', 'Helvetica', Sans-Serif; font-size: 100%; font-weight: bold; margin-top: 2.5em;}
+--></style>
+<title>utils.em</title>
+<LINK REL=StyleSheet HREF="Source_Insight_Macro_File.css" TYPE='text/css' MEDIA=screen>
+</head>
+<body bgcolor=#ffffff>
+<table bgcolor='#c0c0c0' width='100%'>
+<tr><td><p class='filename'><b>utils.em</b></p></td>
+<td align='right'>
+Mon Dec 11 11:54:58 2017
+</td></tr>
+<tr><td><a href='Contents.html'>Contents</a></td></tr>
+</table>
+<pre>
+</span><span class='Comment_Multi_Line'>/* Utils.em - a small collection of useful editing macros */ 
+</span> 
+ 
+ 
+<span class='Comment_Multi_Line'>/*------------------------------------------------------------------------- 
+    I N S E R T   H E A D E R 
+ 
+    Inserts a comment header block at the top of the current function.  
+    This actually works on any type of symbol, not just functions. 
+ 
+    To use this, define an environment variable "MYNAME" and set it 
+    to your email name.  eg. set MYNAME=raygr 
+-------------------------------------------------------------------------*/ 
+</span><a name="LN13"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>InsertHeader</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    <span class='Comment_Single_Line'>// Get the owner's name from the environment variable: MYNAME. 
+</span>    <span class='Comment_Single_Line'>// If the variable doesn't exist, then the owner field is skipped. 
+</span>    szMyName <span class='Operator'>= </span><span class='System'>getenv</span><span class='Parentheses'>(</span>MYNAME<span class='Parentheses'>) 
+</span>     
+    <span class='Comment_Single_Line'>// Get a handle to the current file buffer and the name 
+</span>    <span class='Comment_Single_Line'>// and location of the current symbol where the cursor is. 
+</span>    hbuf <span class='Operator'>= </span><span class='System'>GetCurrentBuf</span><span class='Parentheses'>() 
+</span>    szFunc <span class='Operator'>= </span><span class='System'>GetCurSymbol</span><span class='Parentheses'>() 
+</span>    ln <span class='Operator'>= </span><span class='System'>GetSymbolLine</span><span class='Parentheses'>(</span>szFunc<span class='Parentheses'>) 
+</span> 
+    <span class='Comment_Single_Line'>// begin assembling the title string 
+</span>    sz <span class='Operator'>= </span><span class='String'>"/*   "</span> 
+     
+    <span class='Comment_Multi_Line'>/* convert symbol name to T E X T   L I K E   T H I S */ 
+</span>    cch <span class='Operator'>= </span><span class='System'>strlen</span><span class='Parentheses'>(</span>szFunc<span class='Parentheses'>) 
+</span>    ich <span class='Operator'>= </span><span class='Number'>0</span> 
+    <span class='Control'>while</span> <span class='Parentheses'>(</span>ich <span class='Operator'>&LT; </span>cch<span class='Parentheses'>) 
+</span>        <span class='Delimiter'>{ 
+</span>        ch <span class='Operator'>= </span>szFunc<span class='Delimiter'>[</span>ich<span class='Delimiter'>] 
+</span>        <span class='Control'>if</span> <span class='Parentheses'>(</span>ich <span class='Operator'>&GT; </span><span class='Number'>0</span><span class='Parentheses'>) 
+</span>            <span class='Control'>if</span> <span class='Parentheses'>(</span><span class='System'>isupper</span><span class='Parentheses'>(</span>ch<span class='Parentheses'>))</span> 
+                sz <span class='Operator'>= </span><span class='System'>cat</span><span class='Parentheses'>(</span>sz<span class='Delimiter'>, </span><span class='String'>"   "</span><span class='Parentheses'>) 
+</span>            <span class='Control'>else</span> 
+                sz <span class='Operator'>= </span><span class='System'>cat</span><span class='Parentheses'>(</span>sz<span class='Delimiter'>, </span><span class='String'>" "</span><span class='Parentheses'>) 
+</span>        sz <span class='Operator'>= </span><span class='System'>Cat</span><span class='Parentheses'>(</span>sz<span class='Delimiter'>, </span><span class='System'>toupper</span><span class='Parentheses'>(</span>ch<span class='Parentheses'>))</span> 
+        ich <span class='Operator'>= </span>ich <span class='Operator'>+ </span><span class='Number'>1</span> 
+        <span class='Delimiter'>} 
+</span>     
+    sz <span class='Operator'>= </span><span class='System'>Cat</span><span class='Parentheses'>(</span>sz<span class='Delimiter'>, </span><span class='String'>"   */"</span><span class='Parentheses'>) 
+</span>    <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>ln<span class='Delimiter'>, </span>sz<span class='Parentheses'>) 
+</span>    <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>ln<span class='Operator'>+</span><span class='Number'>1</span><span class='Delimiter'>, </span><span class='String'>"/*-------------------------------------------------------------------------"</span><span class='Parentheses'>) 
+</span>     
+    <span class='Comment_Multi_Line'>/* if owner variable exists, insert Owner: name */ 
+</span>    <span class='Control'>if</span> <span class='Parentheses'>(</span><span class='System'>strlen</span><span class='Parentheses'>(</span>szMyName<span class='Parentheses'>) </span><span class='Operator'>&GT; </span><span class='Number'>0</span><span class='Parentheses'>)</span> 
+        <span class='Delimiter'>{ 
+</span>        <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>ln<span class='Operator'>+</span><span class='Number'>2</span><span class='Delimiter'>, </span><span class='String'>"    Owner: @szMyName@"</span><span class='Parentheses'>) 
+</span>        <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>ln<span class='Operator'>+</span><span class='Number'>3</span><span class='Delimiter'>, </span><span class='String'>" "</span><span class='Parentheses'>) 
+</span>        ln <span class='Operator'>= </span>ln <span class='Operator'>+ </span><span class='Number'>4</span> 
+        <span class='Delimiter'>} 
+</span>    <span class='Control'>else</span> 
+        ln <span class='Operator'>= </span>ln <span class='Operator'>+ </span><span class='Number'>2</span> 
+     
+    <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>ln<span class='Delimiter'>,</span>   <span class='String'>"    "</span><span class='Parentheses'>) </span><span class='Comment_Single_Line'>// provide an indent already 
+</span>    <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>ln<span class='Operator'>+</span><span class='Number'>1</span><span class='Delimiter'>, </span><span class='String'>"-------------------------------------------------------------------------*/"</span><span class='Parentheses'>) 
+</span>     
+    <span class='Comment_Single_Line'>// put the insertion point inside the header comment 
+</span>    <span class='System'>SetBufIns</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>ln<span class='Delimiter'>, </span><span class='Number'>4</span><span class='Parentheses'>) 
+</span><span class='Delimiter'>} 
+</span> 
+ 
+<span class='Comment_Multi_Line'>/* InsertFileHeader: 
+ 
+   Inserts a comment header block at the top of the current function.  
+   This actually works on any type of symbol, not just functions. 
+ 
+   To use this, define an environment variable "MYNAME" and set it 
+   to your email name.  eg. set MYNAME=raygr 
+*/ 
+</span> 
+<a name="LN74"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>InsertFileHeader</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    szMyName <span class='Operator'>= </span><span class='System'>getenv</span><span class='Parentheses'>(</span>MYNAME<span class='Parentheses'>) 
+</span>     
+    hbuf <span class='Operator'>= </span><span class='System'>GetCurrentBuf</span><span class='Parentheses'>() 
+</span> 
+    <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span><span class='Number'>0</span><span class='Delimiter'>, </span><span class='String'>"/*-------------------------------------------------------------------------"</span><span class='Parentheses'>) 
+</span>     
+    <span class='Comment_Multi_Line'>/* if owner variable exists, insert Owner: name */ 
+</span>    <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span><span class='Number'>1</span><span class='Delimiter'>, </span><span class='String'>"    "</span><span class='Parentheses'>) 
+</span>    <span class='Control'>if</span> <span class='Parentheses'>(</span><span class='System'>strlen</span><span class='Parentheses'>(</span>szMyName<span class='Parentheses'>) </span><span class='Operator'>&GT; </span><span class='Number'>0</span><span class='Parentheses'>)</span> 
+        <span class='Delimiter'>{ 
+</span>        sz <span class='Operator'>= </span><span class='String'>"    Owner: @szMyName@"</span> 
+        <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span><span class='Number'>2</span><span class='Delimiter'>, </span><span class='String'>" "</span><span class='Parentheses'>) 
+</span>        <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span><span class='Number'>3</span><span class='Delimiter'>, </span>sz<span class='Parentheses'>) 
+</span>        ln <span class='Operator'>= </span><span class='Number'>4</span> 
+        <span class='Delimiter'>} 
+</span>    <span class='Control'>else</span> 
+        ln <span class='Operator'>= </span><span class='Number'>2</span> 
+     
+    <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>ln<span class='Delimiter'>, </span><span class='String'>"-------------------------------------------------------------------------*/"</span><span class='Parentheses'>) 
+</span><span class='Delimiter'>} 
+</span> 
+ 
+ 
+<span class='Comment_Single_Line'>// Inserts "Returns True .. or False..." at the current line 
+</span><a name="LN100"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>ReturnTrueOrFalse</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    hbuf <span class='Operator'>= </span><span class='System'>GetCurrentBuf</span><span class='Parentheses'>() 
+</span>    ln <span class='Operator'>= </span>GetBufLineCur<span class='Parentheses'>(</span>hbuf<span class='Parentheses'>) 
+</span> 
+    <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>ln<span class='Delimiter'>, </span><span class='String'>"    Returns True if successful or False if errors."</span><span class='Parentheses'>) 
+</span><span class='Delimiter'>} 
+</span> 
+ 
+ 
+<span class='Comment_Multi_Line'>/* Inserts ifdef REVIEW around the selection */ 
+</span><a name="LN111"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>IfdefReview</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    <a href="utils.em.html#LN147"><span class='Ref_to_EdMacro'>IfdefSz</span></a><span class='Parentheses'>(</span><span class='String'>"REVIEW"</span><span class='Parentheses'>)</span><span class='Delimiter'>; 
+} 
+</span> 
+ 
+<span class='Comment_Multi_Line'>/* Inserts ifdef BOGUS around the selection */ 
+</span><a name="LN118"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>IfdefBogus</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    <a href="utils.em.html#LN147"><span class='Ref_to_EdMacro'>IfdefSz</span></a><span class='Parentheses'>(</span><span class='String'>"BOGUS"</span><span class='Parentheses'>)</span><span class='Delimiter'>; 
+} 
+</span> 
+ 
+<span class='Comment_Multi_Line'>/* Inserts ifdef NEVER around the selection */ 
+</span><a name="LN125"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>IfdefNever</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    <a href="utils.em.html#LN147"><span class='Ref_to_EdMacro'>IfdefSz</span></a><span class='Parentheses'>(</span><span class='String'>"NEVER"</span><span class='Parentheses'>)</span><span class='Delimiter'>; 
+} 
+</span> 
+ 
+<span class='Comment_Single_Line'>// Ask user for ifdef condition and wrap it around current 
+// selection. 
+</span><a name="LN133"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>InsertIfdef</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    sz <span class='Operator'>= </span><span class='System'>Ask</span><span class='Parentheses'>(</span><span class='String'>"Enter ifdef condition:"</span><span class='Parentheses'>) 
+</span>    <span class='Control'>if</span> <span class='Parentheses'>(</span>sz <span class='Operator'>!= </span><span class='String'>""</span><span class='Parentheses'>) 
+</span>        <a href="utils.em.html#LN147"><span class='Ref_to_EdMacro'>IfdefSz</span></a><span class='Parentheses'>(</span>sz<span class='Parentheses'>)</span><span class='Delimiter'>; 
+} 
+</span> 
+<a name="LN140"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>InsertCPlusPlus</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    <a href="utils.em.html#LN147"><span class='Ref_to_EdMacro'>IfdefSz</span></a><span class='Parentheses'>(</span><span class='String'>"__cplusplus"</span><span class='Parentheses'>)</span><span class='Delimiter'>; 
+} 
+</span> 
+ 
+<span class='Comment_Single_Line'>// Wrap ifdef &LT;sz&GT; .. endif around the current selection 
+</span><a name="LN147"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>IfdefSz</span><span class='Parentheses'>(</span><span class='Declare_Parameter'>sz</span><span class='Parentheses'>) 
+</span><span class='Delimiter'>{ 
+</span>    hwnd <span class='Operator'>= </span><span class='System'>GetCurrentWnd</span><span class='Parentheses'>() 
+</span>    lnFirst <span class='Operator'>= </span><span class='System'>GetWndSelLnFirst</span><span class='Parentheses'>(</span>hwnd<span class='Parentheses'>) 
+</span>    lnLast <span class='Operator'>= </span><span class='System'>GetWndSelLnLast</span><span class='Parentheses'>(</span>hwnd<span class='Parentheses'>) 
+</span>      
+    hbuf <span class='Operator'>= </span><span class='System'>GetCurrentBuf</span><span class='Parentheses'>() 
+</span>    <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>lnFirst<span class='Delimiter'>, </span><span class='String'>"#ifdef @sz@"</span><span class='Parentheses'>) 
+</span>    <span class='System'>InsBufLine</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>lnLast<span class='Operator'>+</span><span class='Number'>2</span><span class='Delimiter'>, </span><span class='String'>"#endif /* @sz@ */"</span><span class='Parentheses'>) 
+</span><span class='Delimiter'>} 
+</span> 
+ 
+<span class='Comment_Single_Line'>// Delete the current line and appends it to the clipboard buffer 
+</span><a name="LN160"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>KillLine</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    hbufCur <span class='Operator'>= </span><span class='System'>GetCurrentBuf</span><span class='Parentheses'>()</span><span class='Delimiter'>; 
+</span>    lnCur <span class='Operator'>= </span><span class='System'>GetBufLnCur</span><span class='Parentheses'>(</span>hbufCur<span class='Parentheses'>) 
+</span>    hbufClip <span class='Operator'>= </span><span class='System'>GetBufHandle</span><span class='Parentheses'>(</span><span class='String'>"Clipboard"</span><span class='Parentheses'>) 
+</span>    <span class='System'>AppendBufLine</span><span class='Parentheses'>(</span>hbufClip<span class='Delimiter'>, </span><span class='System'>GetBufLine</span><span class='Parentheses'>(</span>hbufCur<span class='Delimiter'>, </span>lnCur<span class='Parentheses'>))</span> 
+    <span class='System'>DelBufLine</span><span class='Parentheses'>(</span>hbufCur<span class='Delimiter'>, </span>lnCur<span class='Parentheses'>) 
+</span><span class='Delimiter'>} 
+</span> 
+ 
+<span class='Comment_Single_Line'>// Paste lines killed with KillLine (clipboard is emptied) 
+</span><a name="LN171"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>PasteKillLine</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    Paste 
+    <a href="utils.em.html#LN180"><span class='Ref_to_EdMacro'>EmptyBuf</span></a><span class='Parentheses'>(</span><span class='System'>GetBufHandle</span><span class='Parentheses'>(</span><span class='String'>"Clipboard"</span><span class='Parentheses'>))</span> 
+<span class='Delimiter'>} 
+</span> 
+ 
+ 
+<span class='Comment_Single_Line'>// delete all lines in the buffer 
+</span><a name="LN180"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>EmptyBuf</span><span class='Parentheses'>(</span><span class='Declare_Parameter'>hbuf</span><span class='Parentheses'>) 
+</span><span class='Delimiter'>{ 
+</span>    lnMax <span class='Operator'>= </span><span class='System'>GetBufLineCount</span><span class='Parentheses'>(</span><a href="utils.em.html#LN180"><span class='Ref_to_Parameter'>hbuf</span></a><span class='Parentheses'>) 
+</span>    <span class='Control'>while</span> <span class='Parentheses'>(</span>lnMax <span class='Operator'>&GT; </span><span class='Number'>0</span><span class='Parentheses'>) 
+</span>        <span class='Delimiter'>{ 
+</span>        <span class='System'>DelBufLine</span><span class='Parentheses'>(</span><a href="utils.em.html#LN180"><span class='Ref_to_Parameter'>hbuf</span></a><span class='Delimiter'>, </span><span class='Number'>0</span><span class='Parentheses'>) 
+</span>        lnMax <span class='Operator'>= </span>lnMax <span class='Operator'>- </span><span class='Number'>1</span> 
+        <span class='Delimiter'>} 
+} 
+</span> 
+ 
+<span class='Comment_Single_Line'>// Ask the user for a symbol name, then jump to its declaration 
+</span><a name="LN192"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>JumpAnywhere</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    symbol <span class='Operator'>= </span><span class='System'>Ask</span><span class='Parentheses'>(</span><span class='String'>"What declaration would you like to see?"</span><span class='Parentheses'>) 
+</span>    <span class='System'>JumpToSymbolDef</span><span class='Parentheses'>(</span>symbol<span class='Parentheses'>) 
+</span><span class='Delimiter'>} 
+</span> 
+     
+<span class='Comment_Single_Line'>// list all siblings of a user specified symbol 
+// A sibling is any other symbol declared in the same file. 
+</span><a name="LN201"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>OutputSiblingSymbols</span><span class='Parentheses'>() 
+</span><span class='Delimiter'>{ 
+</span>    symbol <span class='Operator'>= </span><span class='System'>Ask</span><span class='Parentheses'>(</span><span class='String'>"What symbol would you like to list siblings for?"</span><span class='Parentheses'>) 
+</span>    hbuf <span class='Operator'>= </span><a href="utils.em.html#LN212"><span class='Ref_to_EdMacro'>ListAllSiblings</span></a><span class='Parentheses'>(</span>symbol<span class='Parentheses'>) 
+</span>    <span class='System'>SetCurrentBuf</span><span class='Parentheses'>(</span>hbuf<span class='Parentheses'>) 
+</span><span class='Delimiter'>} 
+</span> 
+ 
+<span class='Comment_Single_Line'>// Given a symbol name, open the file its declared in and  
+// create a new output buffer listing all of the symbols declared 
+// in that file.  Returns the new buffer handle. 
+</span><a name="LN212"></a><span class='Control'>macro</span> <span class='Declare_Edit_Macro'>ListAllSiblings</span><span class='Parentheses'>(</span><span class='Declare_Parameter'>symbol</span><span class='Parentheses'>) 
+</span><span class='Delimiter'>{ 
+</span>    loc <span class='Operator'>= </span><span class='System'>GetSymbolLocation</span><span class='Parentheses'>(</span><a href="utils.em.html#LN212"><span class='Ref_to_Parameter'>symbol</span></a><span class='Parentheses'>) 
+</span>    <span class='Control'>if</span> <span class='Parentheses'>(</span>loc <span class='Operator'>== </span><span class='String'>""</span><span class='Parentheses'>) 
+</span>        <span class='Delimiter'>{ 
+</span>        <span class='System'>msg </span><span class='Parentheses'>(</span><span class='String'>"@symbol@ not found."</span><span class='Parentheses'>) 
+</span>        <span class='Control'>stop</span> 
+        <span class='Delimiter'>} 
+</span>     
+    hbufOutput <span class='Operator'>= </span><span class='System'>NewBuf</span><span class='Parentheses'>(</span><span class='String'>"Results"</span><span class='Parentheses'>) 
+</span>     
+    hbuf <span class='Operator'>= </span><span class='System'>OpenBuf</span><span class='Parentheses'>(</span>loc<span class='Operator'>.</span>file<span class='Parentheses'>) 
+</span>    <span class='Control'>if</span> <span class='Parentheses'>(</span>hbuf <span class='Operator'>== </span><span class='Number'>0</span><span class='Parentheses'>) 
+</span>        <span class='Delimiter'>{ 
+</span>        <span class='System'>msg </span><span class='Parentheses'>(</span><span class='String'>"Can't open file."</span><span class='Parentheses'>) 
+</span>        <span class='Control'>stop</span> 
+        <span class='Delimiter'>} 
+</span>         
+    isymMax <span class='Operator'>= </span><span class='System'>GetBufSymCount</span><span class='Parentheses'>(</span>hbuf<span class='Parentheses'>) 
+</span>    isym <span class='Operator'>= </span><span class='Number'>0</span><span class='Delimiter'>; 
+</span>    <span class='Control'>while</span> <span class='Parentheses'>(</span>isym <span class='Operator'>&LT; </span>isymMax<span class='Parentheses'>) 
+</span>        <span class='Delimiter'>{ 
+</span>        <span class='System'>AppendBufLine</span><span class='Parentheses'>(</span>hbufOutput<span class='Delimiter'>, </span><span class='System'>GetBufSymName</span><span class='Parentheses'>(</span>hbuf<span class='Delimiter'>, </span>isym<span class='Parentheses'>))</span> 
+        isym <span class='Operator'>= </span>isym <span class='Operator'>+ </span><span class='Number'>1</span> 
+        <span class='Delimiter'>} 
+</span> 
+    <span class='System'>CloseBuf</span><span class='Parentheses'>(</span>hbuf<span class='Parentheses'>) 
+</span>     
+    <span class='Control'>return</span> hbufOutput 
+ 
+<span class='Delimiter'>} 
+</span></pre>
+<table bgcolor='#c0c0c0' width='100%'><tr><td><a href='Contents.html'>Contents</a></td></tr>
+</table><hr><p class='blurb' align='center'><a href='http://www.sourceinsight.com'>HTML Created by Source Insight Version 4.00.0084 Built on 2017-02-26</a></p>
+</body></html>
