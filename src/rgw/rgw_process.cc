@@ -119,34 +119,38 @@ int process_request(RGWRados* const store,
 {
   int ret = 0;
 
-  client_io->init(g_ceph_context);
+  client_io->init(g_ceph_context); // 初始化客户端，主要是从request info中取出请求头来，初始化client_io.env（RGWMongoose client_io(conn, pe->port);）
 
-  req->log_init();
+  req->log_init();  //初始化请求开始时间，及获取系统时间设置req中的时间变量ts
 
   dout(1) << "====== starting new request req=" << hex << req << dec
 	  << " =====" << dendl;
-  perfcounter->inc(l_rgw_req);
+  perfcounter->inc(l_rgw_req);  //更新性能计数器，累加请求一次。
 
-  RGWEnv& rgw_env = client_io->get_env();
+  RGWEnv& rgw_env = client_io->get_env(); //初始化执行环境,获取client_io的env来初始化，rgw_env)
 
   RGWUserInfo userinfo;
 
-  struct req_state rstate(g_ceph_context, &rgw_env, &userinfo);
+  struct req_state rstate(g_ceph_context, &rgw_env, &userinfo);//存储用于完成完成请求的所有信息（Store all the state necessary to complete and respond to an HTTP request）
   struct req_state *s = &rstate;
 
-  RGWObjectCtx rados_ctx(store, s);
+  RGWObjectCtx rados_ctx(store, s);//初始化rados上下文
   s->obj_ctx = &rados_ctx;
-
+  
+  //初始化存储
   s->req_id = store->unique_id(req->id);
   s->trans_id = store->unique_trans_id(req->id);
   s->host_id = store->host_id;
-
+  
+  //记录日志
   req->log_format(s, "initializing for trans_id = %s", s->trans_id.c_str());
 
-  RGWOp* op = NULL;
+  RGWOp* op = NULL; //初始化RGWOp *op
   int init_error = 0;
   bool should_log = false;
-  RGWRESTMgr *mgr;
+  RGWRESTMgr *mgr; //声明RGWRESTMgr 对象
+
+  //根据请求的url来选择对应的manager和该manager中的handler
   RGWHandler_REST *handler = rest->get_handler(store, s,
                                                auth_registry,
                                                frontend_prefix,
@@ -171,6 +175,7 @@ int process_request(RGWRados* const store,
 
   s->op_type = op->get_type();
 
+  //检查请求中带的签名与本地服务端计算出的签名是否一致，判断请求是否合法详细过程见[ RGW中的请求的认证过程 ]
   req->log(s, "verifying requester");
   ret = op->verify_requester(auth_registry);
   if (ret < 0) {
@@ -186,20 +191,21 @@ int process_request(RGWRados* const store,
   }
 
   req->log(s, "normalizing buckets and tenants");
-  ret = handler->postauth_init();
+  ret = handler->postauth_init(); //检查tenant和object的有效性
   if (ret < 0) {
     dout(10) << "failed to run post-auth init" << dendl;
     abort_early(s, op, ret, handler);
     goto done;
   }
 
+  //判断用户是否被禁用
   if (s->user->suspended) {
     dout(10) << "user is suspended, uid=" << s->user->user_id << dendl;
     abort_early(s, op, -ERR_USER_SUSPENDED, handler);
     goto done;
   }
 
-  ret = rgw_process_authenticated(handler, op, req, s);
+  ret = rgw_process_authenticated(handler, op, req, s);//读取并创建bucket有效性检查信息
   if (ret < 0) {
     abort_early(s, op, ret, handler);
     goto done;

@@ -416,6 +416,9 @@ int rgw_build_bucket_policies(RGWRados* store, struct req_state* s)
   }
 
   /* check if copy source is within the current domain */
+  /*
+    在进行copy的时候会有源bucket和目标bucket，判断两个bucket的zonegroup是否相同
+  */
   if (!s->src_bucket_name.empty()) {
     RGWBucketInfo source_info;
 

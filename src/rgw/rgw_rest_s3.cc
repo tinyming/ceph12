@@ -3209,6 +3209,7 @@ int RGWHandler_REST_S3::postauth_init()
   struct req_init_state *t = &s->init_state;
   bool relaxed_names = s->cct->_conf->rgw_relaxed_s3_bucket_names;
 
+  //解析出tenant和bucket名称
   rgw_parse_url_bucket(t->url_bucket, s->user->user_id.tenant,
 		      s->bucket_tenant, s->bucket_name);
 
@@ -3216,7 +3217,7 @@ int RGWHandler_REST_S3::postauth_init()
            << " s->bucket=" << rgw_make_bucket_entry_name(s->bucket_tenant, s->bucket_name) << dendl;
 
   int ret;
-  ret = rgw_validate_tenant_name(s->bucket_tenant);
+  ret = rgw_validate_tenant_name(s->bucket_tenant);//检查tenant的合法性
   if (ret)
     return ret;
   if (!s->bucket_name.empty()) {

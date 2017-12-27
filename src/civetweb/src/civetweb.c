@@ -12680,6 +12680,7 @@ master_thread_run(void *thread_func_param)
 	mg_set_thread_name("master");
 
 /* Increase priority of the master thread */
+/*增加master的优先权*/
 #if defined(_WIN32)
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
 #elif defined(USE_MASTER_THREAD_PRIORITY)
@@ -12718,7 +12719,7 @@ master_thread_run(void *thread_func_param)
 			pfd[i].events = POLLIN;
 		}
 
-		if (poll(pfd, ctx->num_listening_sockets, 200) > 0) {
+		if (poll(pfd, ctx->num_listening_sockets, 200) > 0) {//poll函数调用的阻塞时间，200ms
 			for (i = 0; i < ctx->num_listening_sockets; i++) {
 				/* NOTE(lsm): on QNX, poll() returns POLLRDNORM after the
 				 * successful poll, and POLLIN is defined as
